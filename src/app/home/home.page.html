@@ -1,20 +1,282 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Blank
+      <ion-icon name="checkmark-done-circle" class="header-icon"></ion-icon>
+      Mi Lista de Tareas
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button id="open-add" fill="solid" color="light">
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="content-bg">
+  <!-- Summary Cards -->
+  <div class="summary-section ion-padding">
+    <h2 class="section-title">Resumen</h2>
+    <div class="summary-cards summary-cards--stacked">
+      <ion-card class="summary-card pending-card">
+        <ion-card-content>
+          <div class="card-row">
+            <div class="card-icon">
+              <ion-icon name="time-outline"></ion-icon>
+            </div>
+            <div class="card-info">
+              <div class="card-number">{{ pendingCount }}</div>
+              <div class="card-label">Pendientes</div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+      <ion-card class="summary-card completed-card">
+        <ion-card-content>
+          <div class="card-row">
+            <div class="card-icon">
+              <ion-icon name="checkmark-circle"></ion-icon>
+            </div>
+            <div class="card-info">
+              <div class="card-number">{{ completedCount }}</div>
+              <div class="card-label">Completadas</div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card total-card">
+        <ion-card-content>
+          <div class="card-row">
+            <div class="card-icon">
+              <ion-icon name="list"></ion-icon>
+            </div>
+            <div class="card-info">
+              <div class="card-number">{{ tasks.length }}</div>
+              <div class="card-label">Total</div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
   </div>
+
+  <!-- Tasks List -->
+  <div class="tasks-section">
+    <div class="ion-padding-horizontal">
+      <div class="tasks-header">
+        <h2 class="section-title">Tareas</h2>
+        <ion-segment [value]="selectedFilter" (ionChange)="onFilterChange($any($event.detail).value)">
+          <ion-segment-button value="pendientes">
+            <ion-label>Pendientes</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="todas">
+            <ion-label>Todas</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="completadas">
+            <ion-label>Completadas</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+    </div>
+
+    <div *ngIf="filteredTasks.length > 0; else empty" class="task-list">
+      <ion-card *ngFor="let task of filteredTasks" class="task-card" [ngClass]="{completed: task.completada}" button (click)="openDetails(task)">
+        <ion-card-content>
+          <div class="task-header">
+            <div class="task-meta">
+              <div class="task-type-icon" [ngClass]="'type-' + task.tipo">
+                <ion-icon [name]="getTypeIcon(task.tipo)"></ion-icon>
+              </div>
+              <ion-badge class="task-badge" [color]="getTypeBadgeColor(task.tipo)">{{ task.tipo }}</ion-badge>
+            </div>
+          </div>
+          <ion-chip *ngIf="task.completada" color="success" class="status-chip floating-chip">
+            <ion-icon name="checkmark-circle" color="success"></ion-icon>
+            <ion-label>Completada</ion-label>
+          </ion-chip>
+          <h3 class="task-title">{{ task.nombre }}</h3>
+          <p class="task-description">{{ task.descripcion || 'Sin descripción' }}</p>
+          <div class="task-actions">
+            <ion-button *ngIf="!task.completada" fill="clear" size="small" color="success" (click)="completeTask(task); $event.stopPropagation()">
+              <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+              Completar
+            </ion-button>
+            <ion-button fill="clear" size="small" color="danger" (click)="deleteTask(task); $event.stopPropagation()">
+              <ion-icon name="trash" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <ng-template #empty>
+      <div class="empty-state ion-text-center ion-padding">
+        <div class="empty-icon">
+          <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        </div>
+        <h3>¡Todo listo! 🎉</h3>
+        <p>No hay tareas pendientes</p>
+        <ion-button id="open-add-empty" color="primary" class="ion-margin-top">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Agregar tarea
+        </ion-button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Add Task Modal -->
+  <ion-modal #addModal trigger="open-add">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="dismissModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+          <ion-title>
+            <ion-icon name="add-circle-outline" class="title-icon"></ion-icon>
+            Nueva Tarea
+          </ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding modal-content">
+        <div class="form-container">
+          <ion-list lines="none" class="form-list">
+            <ion-item class="form-item">
+              <ion-icon name="create-outline" slot="start" color="primary"></ion-icon>
+              <ion-input
+                label="Nombre"
+                label-placement="floating"
+                [(ngModel)]="nombre"
+                placeholder="¿Qué necesitas hacer?"
+                required
+                class="custom-input">
+              </ion-input>
+            </ion-item>
+
+            <ion-item class="form-item">
+              <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+              <ion-textarea
+                label="Descripción"
+                label-placement="floating"
+                [(ngModel)]="descripcion"
+                auto-grow="true"
+                rows="3"
+                placeholder="Agrega más detalles..."
+                class="custom-input">
+              </ion-textarea>
+            </ion-item>
+
+            <ion-item class="form-item">
+              <ion-icon name="pricetag-outline" slot="start" color="primary"></ion-icon>
+              <ion-select
+                label="Categoría"
+                label-placement="floating"
+                [(ngModel)]="tipo"
+                interface="action-sheet"
+                class="custom-select">
+                <ion-select-option value="trabajo">
+                  <ion-icon name="briefcase-outline"></ion-icon>
+                  Trabajo
+                </ion-select-option>
+                <ion-select-option value="casa">
+                  <ion-icon name="home-outline"></ion-icon>
+                  Casa
+                </ion-select-option>
+                <ion-select-option value="negocios">
+                  <ion-icon name="business-outline"></ion-icon>
+                  Negocios
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+
+          <ion-button
+            expand="block"
+            size="large"
+            color="primary"
+            (click)="addTask()"
+            class="save-button ion-margin-top">
+            <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+            Guardar Tarea
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Empty state add button trigger -->
+  <ion-modal #addModalEmpty trigger="open-add-empty">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="dismissModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+          <ion-title>
+            <ion-icon name="add-circle-outline" class="title-icon"></ion-icon>
+            Nueva Tarea
+          </ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding modal-content">
+        <div class="form-container">
+          <ion-list lines="none" class="form-list">
+            <ion-item class="form-item">
+              <ion-icon name="create-outline" slot="start" color="primary"></ion-icon>
+              <ion-input
+                label="Nombre"
+                label-placement="floating"
+                [(ngModel)]="nombre"
+                placeholder="¿Qué necesitas hacer?"
+                required
+                class="custom-input">
+              </ion-input>
+            </ion-item>
+
+            <ion-item class="form-item">
+              <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+              <ion-textarea
+                label="Descripción"
+                label-placement="floating"
+                [(ngModel)]="descripcion"
+                auto-grow="true"
+                rows="3"
+                placeholder="Agrega más detalles..."
+                class="custom-input">
+              </ion-textarea>
+            </ion-item>
+
+            <ion-item class="form-item">
+              <ion-icon name="pricetag-outline" slot="start" color="primary"></ion-icon>
+              <ion-select
+                label="Categoría"
+                label-placement="floating"
+                [(ngModel)]="tipo"
+                interface="action-sheet"
+                class="custom-select">
+                <ion-select-option value="trabajo">Trabajo</ion-select-option>
+                <ion-select-option value="casa">Casa</ion-select-option>
+                <ion-select-option value="negocios">Negocios</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+
+          <ion-button
+            expand="block"
+            size="large"
+            color="primary"
+            (click)="addTask()"
+            class="save-button ion-margin-top">
+            <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+            Guardar Tarea
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

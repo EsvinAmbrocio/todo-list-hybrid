@@ -1,0 +1,94 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="Atrás"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalles de Tarea</ion-title>
+    <ion-buttons slot="end" *ngIf="task">
+      <ion-button fill="solid" color="danger" (click)="deleteTask()">
+        <ion-icon name="trash" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="task; else notFound" class="detail-content">
+  <div class="detail-header" [ngClass]="'header-' + task.tipo">
+    <div class="header-icon">
+      <ion-icon [name]="getTypeIcon(task.tipo)"></ion-icon>
+    </div>
+    <h1 class="task-name">{{ task.nombre }}</h1>
+    <ion-badge class="task-type-badge" [color]="getTypeBadgeColor(task.tipo)">
+      <ion-icon [name]="getTypeIcon(task.tipo)" class="badge-icon"></ion-icon>
+      {{ task.tipo }}
+    </ion-badge>
+  </div>
+
+  <div class="detail-body ion-padding">
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title class="info-title">
+          <ion-icon name="document-text"></ion-icon>
+          Descripción
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="description-text">{{ task.descripcion || 'Sin descripción adicional' }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="status-card" [ngClass]="task.completada ? 'completed' : 'pending'">
+      <ion-card-content>
+        <div class="status-content">
+          <div class="status-icon">
+            <ion-icon [name]="task.completada ? 'checkmark-circle' : 'time'"></ion-icon>
+          </div>
+          <div class="status-info">
+            <div class="status-label">Estado</div>
+            <div class="status-value">{{ task.completada ? '✅ Completada' : '⏳ Pendiente' }}</div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="date-card">
+      <ion-card-content>
+        <div class="date-content">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <div class="date-info">
+            <div class="date-label">Fecha de creación</div>
+            <div class="date-value">{{ task.createdAt | date:'medium' }}</div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="action-buttons">
+      <ion-button
+        expand="block"
+        size="large"
+        color="success"
+        (click)="markCompleted()"
+        [disabled]="task.completada"
+        class="action-button">
+        <ion-icon name="checkmark-done" slot="start"></ion-icon>
+        {{ task.completada ? 'Ya está completada' : 'Marcar como Completada' }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
+
+<ng-template #notFound>
+  <ion-content class="not-found-content">
+    <div class="not-found">
+      <div class="not-found-icon">
+        <ion-icon name="sad-outline"></ion-icon>
+      </div>
+      <h2>Tarea no encontrada</h2>
+      <p>Esta tarea no existe o fue eliminada</p>
+      <ion-button routerLink="/home" color="primary">
+        <ion-icon name="home" slot="start"></ion-icon>
+        Volver al inicio
+      </ion-button>
+    </div>
+  </ion-content>

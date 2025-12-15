@@ -1,2 +1,28 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+
+:root {
+	/* Brand/category colors - cooler palette */
+	--color-work: #5b8def;         /* cool blue */
+	--color-work-2: #3f62d6;       /* deeper blue */
+	--color-home: #76e0ff;         /* icy cyan */
+	--color-home-2: #3fc1d9;       /* teal cyan */
+	--color-business: #8a7cff;     /* cool purple */
+	--color-business-2: #5f52d9;   /* deeper purple */
+
+	/* Neutral colors */
+	--color-text-primary: #2d3748;
+	--color-text-secondary: #4a5568;
+	--color-text-muted: #718096;
+	--color-card-shadow: rgba(15, 23, 42, 0.12);
+
+	/* Gradients (cool tones) */
+	--gradient-header: linear-gradient(135deg, var(--color-work) 0%, var(--color-work-2) 100%);
+	--gradient-pending: linear-gradient(135deg, var(--color-home) 0%, var(--color-home-2) 100%);
+	--gradient-completed: linear-gradient(135deg, var(--color-business) 0%, var(--color-business-2) 100%);
+	--gradient-total: linear-gradient(135deg, #3cd3ad 0%, #4cb8c4 100%); /* teal-green cool */
+
+	/* Surfaces */
+	--surface-modal: #f1f5f9;  /* cooler light gray */
+	--surface-white: #ffffff;
+}
